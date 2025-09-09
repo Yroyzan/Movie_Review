@@ -1,0 +1,98 @@
+{% extends 'muse/base.html' %}
+
+{% block title %}{{ movie.title }} - Movie Muse{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'movie_list' %}" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left me-2"></i>Back to Movies
+        </a>
+    </div>
+
+    <!-- Movie Details -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title mb-2">{{ movie.title }}</h1>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="star-rating me-3">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= movie.average_rating|floatformat:0 %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="text-muted">
+                            {{ movie.average_rating|floatformat:1 }}/5 
+                            ({{ movie.get_total_reviews }} review{{ movie.get_total_reviews|pluralize }})
+                        </span>
+                    </div>
+
+                    <p><i class="fas fa-user-tie me-2 text-primary"></i><strong>Director:</strong> {{ movie.director }}</p>
+                    <p><i class="fas fa-calendar-alt me-2 text-primary"></i><strong>Release Year:</strong> {{ movie.release_year|date:"Y" }}</p>
+                    <p class="mt-3">{{ movie.description }}</p>
+                </div>
+            </div>
+
+            <!-- Reviews -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h4 class="mb-3"><i class="fas fa-comments me-2"></i>User Reviews</h4>
+
+                    {% if reviews %}
+                        {% for review in reviews %}
+                            <div class="mb-3 border-bottom pb-2">
+                                <strong>{{ review.user.username }}</strong>
+                                <div class="star-rating mb-1">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= review.rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <p>{{ review.review }}</p>
+                                <small class="text-muted">Reviewed on {{ review.created_at|date:"M d, Y" }}</small>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No reviews yet. Be the first to review this movie!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Add/Edit Review -->
+            {% if user.is_authenticated %}
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h4 class="mb-3">
+                            {% if user_review %}Edit Your Review{% else %}Leave a Review{% endif %}
+                        </h4>
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <a href="{% url 'login' %}?next={% url 'movie_detail' movie.pk %}">Login</a> 
+                    or 
+                    <a href="{% url 'signup' %}">Sign up</a> 
+                    to leave a review.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

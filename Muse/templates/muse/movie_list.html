@@ -1,0 +1,144 @@
+{% extends 'muse/base.html' %}
+
+{% block title %}Movie List - Movie Muse{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-star me-3"></i>Discover Amazing Movies
+        </h1>
+        <p class="lead">Find your next favorite film and share your thoughts with the community</p>
+
+        {% if not user.is_authenticated %}
+            <div class="mt-4">
+                <a href="{% url 'login' %}" class="btn btn-light btn-lg me-2">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+                <a href="{% url 'signup' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Sign Up
+                </a>
+            </div>
+        {% endif %}
+        
+        <!-- Search Form -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <form method="GET" class="search-form d-flex">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search movies, directors, or descriptions..." 
+                           value="{{ search_query }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Genre Filter -->
+        <div class="genre-filter">
+            <a href="{% url 'movie_list' %}" class="genre-badge {% if not selected_genre %}active{% endif %}">
+                All Genres
+            </a>
+            {% for genre in genres %}
+                <a href="?genre={{ genre.name }}" 
+                   class="genre-badge {% if selected_genre == genre.name %}active{% endif %}">
+                    {{ genre.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="container movie-grid">
+    {% if search_query %}
+        <h3 class="text-white mb-4">
+            <i class="fas fa-search me-2"></i>Search results for "{{ search_query }}"
+            <small class="text-muted">({{ movies.count }} movie{{ movies.count|pluralize }})</small>
+        </h3>
+    {% elif selected_genre %}
+        <h3 class="text-white mb-4">
+            <i class="fas fa-filter me-2"></i>{{ selected_genre }} Movies
+            <small class="text-muted">({{ movies.count }} movie{{ movies.count|pluralize }})</small>
+        </h3>
+    {% endif %}
+    
+    <div class="row">
+        {% for movie in movies %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card movie-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title">{{ movie.title }}</h5>
+                            <div class="text-end">
+                                <div class="star-rating">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= movie.average_rating|floatformat:0 %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <small class="text-muted d-block">
+                                    {{ movie.average_rating|floatformat:1 }}/5 
+                                    ({{ movie.get_total_reviews }} review{{ movie.get_total_reviews|pluralize }})
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-user-tie me-1"></i>
+                                <strong>Director:</strong> {{ movie.director }}
+                            </p>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                <strong>Release:</strong> {{ movie.release_year|date:"Y" }}
+                            </p>
+                            <div class="mb-2">
+                                <i class="fas fa-tags me-1"></i>
+                                <strong>Genres:</strong>
+                                {% for genre in movie.genre.all %}
+                                    <span class="badge bg-secondary me-1">{{ genre.name }}</span>
+                                {% empty %}
+                                    <span class="text-muted">No genres listed</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <p class="card-text text-muted">{{ movie.description|truncatewords:20 }}</p>
+                        
+                        <div class="mt-auto">
+                            <a href="{% url 'movie_detail' movie.pk %}" class="btn btn-primary w-100">
+                                <i class="fas fa-eye me-2"></i>View Details & Reviews
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card text-center">
+                    <div class="card-body py-5">
+                        <i class="fas fa-film fa-3x text-muted mb-3"></i>
+                        <h4>No Movies Found</h4>
+                        <p class="text-muted">
+                            {% if search_query %}
+                                No movies match your search criteria. Try different keywords.
+                            {% else %}
+                                No movies are available yet. Check back later!
+                            {% endif %}
+                        </p>
+                        {% if search_query %}
+                            <a href="{% url 'movie_list' %}" class="btn btn-primary">
+                                <i class="fas fa-arrow-left me-2"></i>View All Movies
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
